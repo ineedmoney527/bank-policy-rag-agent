@@ -17,6 +17,7 @@ from typing import List, Dict, Any, Optional
 import pymupdf4llm
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from tqdm import tqdm
 
