@@ -33,9 +33,6 @@ jobs:
       - name: Ingest documents
         run: python src/ingestion.py
       
-      - name: Generate evaluation dataset
-        run: python tests/create_eval_dataset.py
-      
       - name: Run RAGAS evaluation
         id: ragas
         env:
