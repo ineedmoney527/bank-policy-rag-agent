@@ -482,7 +482,17 @@ def ingest_all(pdf_dir: str):
     print(f"Found {len(files)} PDF files")
     print("Initializing embeddings...")
     
-    embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL)
+    embeddings = None
+    try:
+        embeddings = OllamaEmbeddings(model=PRIMARY_EMBEDDING_MODEL)
+        embeddings.embed_query("test")
+        print(f"Using embedding model: {PRIMARY_EMBEDDING_MODEL}")
+    except Exception as e:
+        print(f"Ollama failed ({e}), using HuggingFace sentence-transformers")
+        # Fallback to HuggingFace embeddings (works without Ollama)
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
     
     vectorstore = Chroma(
         persist_directory=CHROMA_PERSIST_DIR,
