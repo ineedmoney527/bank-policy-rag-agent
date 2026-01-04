@@ -297,4 +297,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     
-    run_evaluation(run_pipeline=args.skip_pipeline)
+    run_evaluation(run_pipeline=not args.skip_pipeline)
