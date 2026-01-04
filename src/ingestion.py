@@ -520,5 +520,5 @@ def ingest_all(pdf_dir: str):
 
 
 if __name__ == "__main__":
-    pdf_directory = "/Users/choojunheng/.gemini/antigravity/scratch/agent/data/bnm"
+    pdf_directory = str(PROJECT_ROOT / "data" / "bnm")
     ingest_all(pdf_directory)
