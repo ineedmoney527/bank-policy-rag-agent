@@ -63,7 +63,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable is not set")
     
-EVAL_LLM_MODEL = "xiaomi/mimo-v2-flash:free"
+EVAL_LLM_MODEL = "deepseek/deepseek-v3.2"
 
 
 def strip_citations(text: str) -> str:
