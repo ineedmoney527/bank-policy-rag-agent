@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.DS_Store
+
+# Vector DB
+chroma_db/
+chroma_db_parent/
+
+# Outputs
+tests/ragas_results.json
+
+# Local Data (remove if you want to include PDFs)
+data/

@@ -1,0 +1,214 @@
+[
+  {
+    "id": "q01",
+    "question": "What specific responsibilities does the board of directors have regarding the establishment and approval of a financial institution's technology risk appetite?",
+    "ground_truth": "The board must approve the corresponding risk tolerances for technology-related events, taking into account the potential impact on business operations and customers. They must identify a risk owner to ensure clear accountability and establish criteria and approving authority for the acceptance of residual risks. Additionally, the board is responsible for ensuring key risk indicators are identified to monitor existing and emerging risks against the risk tolerance, ensuring the sufficiency and appropriate deployment of resources, and conducting reviews of the technology risk appetite at regular intervals to ensure it remains relevant.",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q02",
+    "question": "What are the specific requirements for a financial institution's cloud risk management framework regarding its integration with existing frameworks, adaptation to service models, and frequency of review?",
+    "ground_truth": "The cloud risk management framework must be an integral part of the financial institution's enterprise risk management framework (ERM). It needs to be tailored to the specific cloud service models (such as SaaS, PaaS, and IaaS) that are either currently in use or being considered. It must also integrate with the existing outsourcing risk management framework, technology risk management framework (TRMF), and cyber resilience framework (CRF).The framework must also specify the scope of the institution's responsibility under each shared responsibility model. Furthermore, this framework must undergo a periodic review at least once every three years to ensure its adequacy, or immediately following any major cybersecurity incidents involving cloud services.",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q03",
+    "question": "If a financial institution plans to enhance an existing digital service, what criteria determine if it qualifies for a 'simplified notification' to the Bank, and what information must be submitted in that notification?",
+    "ground_truth": "To qualify for a simplified notification, the enhancement must meet criteria set out in Appendix 6. Specifically, the enhancement must not result in the introduction of new technology to the institution or industry, must not cause material changes in application architecture or network design, and must not involve the transmission of confidential or sensitive data. Alternatively, the enhancement qualifies if it is a service expansion leveraging approved websites or mobile applications within the financial group, or if it involves integration with IT services operated by regulated entities. If qualified, the notification submitted to the Bank must include a description of the enhancements to the existing technologies and a risk assessment of the proposed enhancements, covering the impact and measures to mitigate identified risks.",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q04",
+    "question": "What is the minimum age and income requirement for a principal cardholder of a debit card-i?",
+    "ground_truth": "There is no minimum age or income requirement explicitly stated for debit card-i principal cardholders in the policy document.",
+    "contexts": [],
+    "source_pdf": "bnm_debit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q05",
+    "question": "If a debit card issuer decides to impose a cooling-off period for the enrolment of a secure device, how must they communicate this to the cardholder?",
+    "ground_truth": "The issuer must clearly notify the cardholders of the imposition of a cooling-off period at the point of its activation through all available communication channels, either in writing or verbally, such as via email, SMS, or telephone call.",
+    "contexts": [],
+    "source_pdf": "bnm_debit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q06",
+    "question": "Under what specific conditions is an issuer of a debit card product prohibited from holding a cardholder liable for losses incurred from an unauthorised transaction, and what exceptions exist where the issuer can prove cardholder liability?",
+    "ground_truth": "An issuer is prohibited from holding a cardholder liable for losses arising from an unauthorised transaction where the losses result from the issuer’s failure to inform cardholders of their obligations, failure to provide adequate notification channels, system breakdowns or deficiencies, weaknesses in fraud detection or controls, use of forged, faulty or cancelled cards, transactions occurring before the cardholder receives a passcode, security credential or device, fraudulent or negligent conduct by the issuer’s employees, agents, acquirers or merchants, transactions occurring after the cardholder has notified the issuer of card loss, theft, unauthorised use or compromised security credentials, failure by the issuer, network operator or acquirer to resolve contradictory evidence during investigation, or where the issuer or acquirer does not apply strong authentication for card-not-present transactions. However, the issuer may hold the cardholder liable if the issuer proves that the cardholder acted fraudulently, refused to cooperate in the investigation, or failed to comply with the cardholder obligations set out under paragraph 11.7",
+    "contexts": [],
+    "source_pdf": "bnm_debit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q07",
+    "question": "What is the maximum late payment charge that a credit card issuer can impose?",
+    "ground_truth": "The late payment charge shall be the lower of 1% of the outstanding balance or RM100. If issuer intends to set a minimum late payment charge, it shall not exceed RM10.",
+    "contexts": [],
+    "source_pdf": "bnm_credit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q08",
+    "question": "For a 'vulnerable cardholder' who is enrolled in an Automatic Balance Conversion (ABC) program, what specific rights do they have regarding opting out and early settlement of the converted term loan?",
+    "ground_truth": "A vulnerable cardholder has the right to a thirty (30) calendar days cooling-off period to opt out of the ABC for the first conversion exercise without incurring any penalty. For subsequent conversions, they must be given the opportunity to opt out before the conversion commences. Additionally, for credit cards, the cardholder is allowed to early settle the term loan without incurring any penalty. For credit card-i, if the cardholder settles early, the issuer must grant a rebate where applicable without imposing any charge.",
+    "contexts": [],
+    "source_pdf": "bnm_credit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q09",
+    "question": "What are the specific operational requirements for PIN generation that a credit card issuer must observe to ensure a highly secure environment?",
+    "ground_truth": "The issuer must use hardware-based PIN generation and verification, ensure generated PINs are protected from unauthorised access or viewing, and strictly control the generation process by restricting the area to authorised personnel only. Furthermore, the regeneration of the same PIN for the same card or account is prohibited, and an independent party must be present to observe and check that the PIN generation and printing processes follow accepted procedures.",
+    "contexts": [],
+    "source_pdf": "bnm_credit_card_policy_2025.pdf"
+  },
+  {
+    "id": "q10",
+    "question": "Compare the requirements for transaction alerts for debit cards and credit cards regarding the specific triggers that must be implemented by the issuer.",
+    "ground_truth": "Both debit and credit card issuers must provide transaction alerts for transactions exceeding a specified threshold amount, for the first-time use of a new card, and for all card-not-present (CNP) transactions (except recurring auto-debits). Both must also send alerts for high-risk transactions based on criteria like location, amount, and velocity, and for the activation of self-service toggles for CNP/overseas transactions. Additionally, for debit cards specifically, there is a requirement to send alerts for rejected CNP transactions with a brief remark on the rejection cause, whereas the credit card policy also mandates alerts for rejected CNP transactions with a brief remark. Essentially, the mandatory triggers are identical across both policies.",
+    "contexts": [],
+    "source_pdfs": ["bnm_debit_card_policy_2025.pdf", "bnm_credit_card_policy_2025.pdf"]
+  },
+
+  {
+    "id": "q11",
+    "question": "What is the minimum sample size requirement for a financial institution when conducting audits to determine the False Acceptance Rate (FAR) of its e-KYC solution?",
+    "ground_truth": "The sample size must minimally meet a 95% confidence level with a 3% margin of error, or 400 cases per month, whichever is higher.",
+    "contexts": [],
+    "source_pdf": "bnm_ekyc_policy_2024.pdf"
+  },
+  {
+    "id": "q12",
+    "question": "What specific test scenarios involving tampering or fakes must be included when conducting breakthrough testing on the facial recognition module of an e-KYC solution?",
+    "ground_truth": "The test scenarios must include low quality fakes (such as self-generated ones), medium quality fakes (such as IDs produced by printing shops), and if possible, high quality fakes. Additionally, tests must cover tampering of the selfie image but not the ID, tampering of the ID but not the selfie image, tampering of both the selfie image and the ID, and the use of a different person's selfie against an ID (e.g., Mr. A's selfie against Mr. B's ID).",
+    "contexts": [],
+    "source_pdf": "bnm_ekyc_policy_2024.pdf"
+  },
+  {
+    "id": "q13",
+    "question": "Under what conditions can a financial institution uplift the ringfencing parameters and fund transfer limitations for a higher risk product account that was opened via e-KYC without the credit transfer safeguard?",
+    "ground_truth": "A financial institution may consider uplifting these parameters if it ascertains the customer is genuine and determines the account may be upgraded, subject to either observing sufficient account activity for at least twelve months with a satisfactory assessment that the account is genuine, or if the customer consents to visit a bank branch for physical identity verification.",
+    "contexts": [],
+    "source_pdf": "bnm_ekyc_policy_2024.pdf"
+  },
+  {
+    "id": "q14",
+    "question": "What is the mandated minimum frequency for Shariah committee meetings for a standard Islamic financial institution, and what is the exception for specific types of entities?",
+    "ground_truth": "A standard Islamic financial institution must hold its Shariah committee meetings at least once in every two months. However, for an Islamic financial institution operating as an Islamic window or a foreign branch in Malaysia, the requirement is to hold meetings at least two times a year.",
+    "contexts": [],
+    "source_pdf": "bnm_shariah_governance_policy_2019.pdf"
+  },
+  {
+    "id": "q15",
+    "question": "Under what specific circumstances is a Shariah committee member disqualified from office due to criminal matters, and how is the term 'criminal proceedings' defined in this context?",
+    "ground_truth": "A Shariah committee member is disqualified if a charge for a criminal offence relating to dishonesty or fraud has been proven against them. Furthermore, if any criminal proceedings for such offences are pending, they cannot act in that capacity. Criminal proceedings are deemed to be pending from the date the accused is first charged in court until the final conclusion of the proceedings, including any appeals in the court of final appellate jurisdiction.",
+    "contexts": [],
+    "source_pdf": "bnm_shariah_governance_policy_2019.pdf"
+  },
+  {
+    "id": "q16",
+    "question": "Compare the primary objectives and specific key responsibilities of the Shariah review function versus the Shariah audit function within an Islamic financial institution.",
+    "ground_truth": "The primary objective of the Shariah review function is to conduct regular assessments on the compliance of the IFI's operations, business, affairs, and activities with Shariah requirements 1, whereas the primary objective of the Shariah audit function is to provide an independent assessment on the quality and effectiveness of the IFI's internal control, risk management systems, governance processes, and overall Shariah compliance2. Regarding specific key responsibilities, the Shariah review function must identify, assess, and monitor compliance 3, report non-compliance issues to the board, Shariah committee, and senior management 4, provide updates on legal and regulatory developments 5, and ensure officers receive adequate training6. In contrast, the Shariah audit function is responsible for establishing an audit methodology to assess risk profiles 7, generating an audit plan 8, establishing documented audit programs 9, and communicating audit results—including findings, recommendations, and auditee responses—to the board and Shariah committee10.",
+    "contexts": [],
+    "source_pdf": "bnm_shariah_governance_policy_2019.pdf"
+  },
+
+  {
+    "id": "q17",
+    "question": "If a vehicle is declared a 'Beyond Economic Repair' (BER) loss, what is the maximum time frame given to a repairer to complete repairs and obtain a roadworthiness certification, and from what specific date does this period commence?",
+    "ground_truth": "The repairer must complete the repairs of a BER vehicle and obtain the appropriate certification of roadworthiness (from a Vehicle Inspection Provider such as PUSPAKOM) within 4 months from the date the repairer receives the BER vehicle.",
+    "contexts": [],
+    "source_pdf": "bnm_claims_settlement_practices_policy_2024.pdf"
+  },
+  {
+    "id": "q18",
+    "question": "When an Insurer or Takaful Operator (ITO) issues an approval or offer letter for a motor claim, what specific details must be included regarding the repair estimates and the calculation of the offer amount?",
+    "ground_truth": "The approval or offer letter must specify itemised repair estimates, including replacement parts prices and labour charges, based on a credible database such as the Motordata Research Consortium (MRC). It must also detail how the scale of betterment, Compensation for Assessed Repair Time (CART), average clause, and deduction of salvage have been applied. Furthermore, the letter must state the options available to the claimant, such as the option for contract repairs, and provide the basis and reasoning for any material differences between the registered adjuster's recommendation and the ITO's final approved amount.",
+    "contexts": [],
+    "source_pdf": "bnm_claims_settlement_practices_policy_2024.pdf"
+  },
+  {
+    "id": "q19",
+    "question": "What are the specific obligations of an Insurer or Takaful Operator (ITO) regarding the disclosure of a motor vehicle's market value at the point of sale or renewal, and how does adhering to the ITO's recommended value protect the consumer in the event of a partial loss claim?",
+    "ground_truth": "At the point of sale or renewal, an Insurer or Takaful Operator (ITO) must advise consumers on the current market value of the motor vehicle based on a credible Vehicle Valuation Database (VVD). The ITO is required to quote the exact market value from the VVD without rounding to the nearest RM1,000. This market value and its source must be clearly indicated in the product disclosure sheet, renewal notice, or quotation slip. Additionally, the ITO must explain the importance of insuring at the appropriate value and the negative effects of over-insurance or under-insurance when a claim is made. These services must be provided without any additional charges. If the consumer insures the motor vehicle at the value recommended by the ITO, the ITO is protected as the 'average clause'—which involves a deduction for under-insurance—cannot be applied in the event of a partial loss claim.",
+    "contexts": [],
+    "source_pdf": "bnm_claims_settlement_practices_policy_2024.pdf"
+  },
+  {
+    "id": "q20",
+    "question": "According to the policy, for what minimum duration must reporting institutions retain relevant records following the completion of a transaction or the termination of a business relationship?",
+    "ground_truth": "Reporting institutions are required to keep the relevant records for at least six years following the completion of the transaction, the termination of the business relationship, or after the date of an occasional transaction (Paragraph 24.3).",
+    "contexts": [],
+    "source_pdf": "bnm_aml_cft_policy_2025.pdf"
+  },
+  {
+    "id": "q21",
+    "question": "What specific criteria and account linkage requirements must be met for a Non-Bank Issuer of e-money to apply simplified Customer Due Diligence (CDD) for account limits between RM3,000 and RM4,999?",
+    "ground_truth": "To apply simplified CDD for account limits between RM3,000 and RM4,999, the following conditions must be met: the monthly transaction amount must be below RM5,000; the annual transaction amount must be below RM60,000; the account must be used for payments of goods and/or services within Malaysia only; it may be used for domestic wire transfers; and cash withdrawals or cross-border wire transfers are not permitted (Paragraph 14D.12.2). Additionally, the institution must ensure the e-money account is linked for reload and refund purposes to either: (a) the customer’s current or savings account maintained with a licensed bank (under FSA/IFSA) or prescribed institution (under DFIA); or (b) the customer’s credit, debit, or charge card account maintained with approved issuers (Paragraph 14D.12.4).",
+    "contexts": [],
+    "source_pdf": "bnm_aml_cft_policy_2025.pdf"
+  },
+  {
+    "id": "q22",
+    "question": "When a reporting institution in the Money Services Business sector establishes a non-face-to-face (non-FTF) business relationship with a legal person, what mandatory and additional verification methods are required to verify the existence of the legal person's business activity?",
+    "ground_truth": "The reporting institution must perform a mandatory verification by making video calls to the chief executive officer (CEO), directors, or authorized person, during which they may request proof of business existence such as signboards or inventories (Paragraph 14C.16.17(a)). This mandatory step must be supported by at least one additional verification method relevant to the business model. For instance, the institution can verify that the physical location matches the registered or business address (Paragraph 14C.16.17(b)). Alternatively, they can verify information against credible independent databases, request active bank accounts or audited financial statements (Paragraph 14C.16.17(c)), or use any other credible verification methods approved by Bank Negara Malaysia (Paragraph 14C.16.17(d)).",
+    "contexts": [],
+    "source_pdf": "bnm_aml_cft_policy_2025.pdf"
+  },
+  {
+    "id": "q23",
+    "question": "According to the RMIT policy, what is the maximum acceptable limit for cumulative unplanned downtime affecting the interface with customers for critical systems on a rolling 12-month basis?",
+    "ground_truth": "For critical systems where there is a reasonable expectation for immediate delivery of service, the cumulative unplanned downtime affecting the interface with customers or counterparties must not be more than 4 hours on a rolling 12-month basis (Paragraph 10.32).",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q24",
+    "question": "To ensure the security of Cash Self-Service Terminals (SSTs), what specific BIOS lock-down measures must financial institutions enforce?",
+    "ground_truth": "Financial institutions are required to enforce Basic Input Output System (BIOS) lock-down by enabling unique password protection for accessing the BIOS, which must be held under strict control. They must also disable external input devices and ports such as CD-ROMs, floppy disks, and USB ports to ensure the operating system only boots from the internal hard disk. Furthermore, automatic BIOS updates must be disabled (Appendix 2, Paragraph 9).",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q25",
+    "question": "What are the specific requirements regarding the development, maintenance, and content of the fraud management playbook that financial institutions must establish?",
+    "ground_truth": "Financial institutions must develop a comprehensive fraud management playbook to serve as a reference point for relevant staff to promptly identify, confirm, and respond effectively to various fraud scenarios (Appendix 11, Paragraph 8). This playbook is required to be updated and validated at least once a year, or more frequently if necessary, to remain relevant in the evolving fraud landscape. Additionally, the playbook must reflect insights gained from assessments of confirmed fraud cases and incorporate lessons learned from incidents where the institution was unable to detect fraudulent activities or transactions (Appendix 11, Paragraph 8).",
+    "contexts": [],
+    "source_pdf": "bnm_rmit_technology_risk_policy_2025.pdf"
+  },
+  {
+    "id": "q26",
+    "question": "According to the policy document, what is the duration of the 'free-look period' provided to a policy owner or takaful participant to examine the terms and conditions of a newly issued MHIT policy/takaful certificate?",
+    "ground_truth": "A licensed ITO must provide a policy owner or takaful participant with a free-look period of 15 calendar days to examine the terms and conditions or decide whether to terminate the MHIT policy/takaful certificate (Paragraph 8.11).",
+    "contexts": [],
+    "source_pdf": "bnm_medical_health_insurance_takaful_policy_2024.pdf"
+  },
+  {
+    "id": "q27",
+    "question": "To promote responsible healthcare usage, what are the specific minimum co-payment amounts that a licensed ITO must offer as an option for individual medical reimbursement insurance/takaful products?",
+    "ground_truth": "A licensed ITO must offer at least one individual medical reimbursement product with a minimum co-payment amount that is no less than: (i) a Co-insurance/co-takaful of 5% of total claimable expenses (after deductible, if any) per policy/takaful certificate year, subject to a maximum co-payment limit set by the licensed ITO; and/or (ii) a RM500 deductible per policy/takaful certificate year (Paragraph 9.4(a)).",
+    "contexts": [],
+    "source_pdf": "bnm_medical_health_insurance_takaful_policy_2024.pdf"
+  },
+  {
+    "id": "q28",
+    "question": "What conditions must be satisfied for a licensed ITO to give effect to revisions on an in-force MHIT policy/takaful certificate, other than periodic premium/takaful contribution revisions?",
+    "ground_truth": "To give effect to revisions on an in-force MHIT policy (other than premium/contribution revisions), the licensed ITO must: (a) demonstrate to BNM that the revision is necessary due to emerging developments; (b) communicate the details, consequences, and avenues for assistance to policy owners in advance; (c) obtain explicit written consent from policy owners via an opt-in approach; and (d) monitor the claims of policy owners who opted in separately from those who did not (Paragraph 8.16).",
+    "contexts": [],
+    "source_pdf": "bnm_medical_health_insurance_takaful_policy_2024.pdf"
+  },
+  {
+    "id": "q29",
+    "question": "In the annual financial statements, how is the Shariah Committee required to express its opinion regarding the Islamic Financial Institution's (IFI) compliance with Shariah, and what additional disclosures are mandatory if a material Shariah non-compliance event is identified?",
+    "ground_truth": "The Shariah Committee must express its opinion by stating either that nothing has come to their attention to suggest the IFI's operations involve material Shariah non-compliances (Paragraph 22.9(a)), or that the overall operations are compliant despite the occurrence of a material Shariah non-compliance event that has been or is being rectified (Paragraph 22.9(b)). If a material non-compliance event is reported, the disclosure must include the nature of the event, its status, and the measures undertaken to address it (Paragraph 22.10).",
+    "contexts": [],
+    "source_pdf": "bnm_shariah_governance_policy_2019.pdf"
+  },
+  {
+    "id": "q30",
+    "question": "Who is Jun Heng Choo?",
+    "ground_truth": "The policy does not specify the requested information.",
+    "contexts": [],
+    "source_pdf": ""
+  }
+]

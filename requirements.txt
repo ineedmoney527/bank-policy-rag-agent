@@ -1,0 +1,32 @@
+# Compliance-Aware Banking Agent
+# Production-ready requirements for Malaysian market (BNM regulations)
+
+# LangGraph & LangChain
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-ollama>=0.2.0
+
+# Vector Store & Embeddings
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+
+# BM25 for Hybrid Search
+rank-bm25>=0.2.2
+
+# PDF Processing
+pymupdf>=1.24.0
+
+# FastAPI Server
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic>=2.9.0
+
+# Evaluation
+ragas>=0.2.0
+datasets>=3.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+numpy>=1.26.0
