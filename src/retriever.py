@@ -16,6 +16,7 @@ from pathlib import Path
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
 
 # Ensemble and Compression moved to langchain_classic in this environment
 from langchain_classic.retrievers import EnsembleRetriever, ContextualCompressionRetriever
@@ -68,8 +69,8 @@ _all_docs_for_bm25: Optional[List[Document]] = None
 # Initialization Functions
 # =============================================================================
 
-def get_embeddings() -> OllamaEmbeddings:
-    """Get or initialize embeddings with fallback."""
+def get_embeddings():
+    """Get or initialize embeddings with fallback to HuggingFace for CI."""
     global _embeddings
     if _embeddings is None:
         try:
@@ -77,8 +78,11 @@ def get_embeddings() -> OllamaEmbeddings:
             _embeddings.embed_query("test")
             print(f"Using embedding model: {PRIMARY_EMBEDDING_MODEL}")
         except Exception as e:
-            print(f"Primary model failed ({e}), using {FALLBACK_EMBEDDING_MODEL}")
-            _embeddings = OllamaEmbeddings(model=FALLBACK_EMBEDDING_MODEL)
+            print(f"Ollama failed ({e}), using HuggingFace sentence-transformers")
+            # Fallback to HuggingFace embeddings (works without Ollama)
+            _embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
     return _embeddings
 
 
