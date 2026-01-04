@@ -30,6 +30,9 @@ jobs:
           pip install -r requirements.txt
           pip install ragas datasets
       
+      - name: Ingest documents
+        run: python src/ingestion.py
+      
       - name: Generate evaluation dataset
         run: python tests/create_eval_dataset.py
       
