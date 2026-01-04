@@ -14,6 +14,10 @@ import json
 import re
 import sys
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from pathlib import Path
 from datetime import datetime
 import numpy as np

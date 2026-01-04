@@ -13,10 +13,14 @@ This module implements a sophisticated RAG pipeline with:
 
 import hashlib
 import pickle
+import os
 import re
 from pathlib import Path
 from typing import TypedDict, List, Annotated, Literal, Optional, Dict, Union
 from operator import add
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from pydantic import BaseModel, Field, field_validator
 from langchain_core.documents import Document
@@ -66,7 +70,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable is not set")
 
-MODEL_NAME = "google/gemini-2.0-flash-thinking-exp:free"
+MODEL_NAME = "xiaomi/mimo-v2-flash:free"
 # LLM_MODEL = "mistral:7b-instruct"  # Using Qwen 2.5 7B (available locally)
 MAX_RETRY_COUNT = 3
 MAX_REVISION_COUNT = 2
@@ -142,7 +146,7 @@ class AgentState(TypedDict):
 # =============================================================================
 
 llm = ChatOpenAI(
-    model=LLM_MODEL,
+    model=MODEL_NAME,
     temperature=0,
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY
