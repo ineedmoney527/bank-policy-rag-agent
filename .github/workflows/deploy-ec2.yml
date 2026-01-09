@@ -121,6 +121,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            cd ~/bnm-rag-agent
             echo "=== Deployment Status ==="
             docker compose ps
             echo ""
