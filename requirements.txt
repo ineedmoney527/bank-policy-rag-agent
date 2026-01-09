@@ -34,5 +34,5 @@ python-dotenv>=1.0.0
 tqdm>=4.66.0
 numpy>=1.26.0
 
-# Gradio Frontend
+# Gradio Frontend (for Hugging Face Spaces)
 gradio>=4.0.0

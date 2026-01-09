@@ -7,7 +7,6 @@ Endpoints:
 - GET /health: Health check endpoint
 """
 
-import os
 import logging
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -17,9 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
 
-# Server configuration from environment or defaults
-SERVER_HOST = os.environ.get("SERVER_HOST", "0.0.0.0")
-SERVER_PORT = int(os.environ.get("SERVER_PORT", "8000"))
+from src.config import SERVER_HOST, SERVER_PORT
 from src.graph import run_agent
 from src.ingest import run_ingestion
 from src.retriever import get_retriever

@@ -1,41 +1,48 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
+# Virtual environment
 venv/
 .venv/
 env/
 
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # IDE
-.cursor/
 .vscode/
 .idea/
+*.swp
+*.swo
+.cursor/
 
 # Git
 .git/
-.gitignore
+.github/
 
-# Tests
-tests/
-test_*.py
-
-# Local development
+# Environment files (secrets should be set via HF Spaces secrets)
 .env
 .env.local
+.env.*.local
 
-# OS files
-.DS_Store
-Thumbs.db
+# Tests (not needed in production)
+tests/
+test_*.py
+pytest.ini
 
-# Large data files (mount as volume in Railway)
-# Uncomment if you want to exclude data:
-# data/
-# chroma_db/
-
-# Logs
+# Development files
+*.md
+!README.md
 *.log
+*.tmp
 
-# Cache
-.cache/
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Railway (we're deploying to HF Spaces)
+railway.toml

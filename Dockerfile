@@ -1,46 +1,45 @@
-# Compliance-Aware Banking Agent - Railway Deployment
-# Uses Python 3.11 slim image for smaller footprint
+# Dockerfile for Hugging Face Spaces deployment
+# BNM Policy RAG Agent with Gradio frontend
 
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Set environment variables for HF Spaces
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV GRADIO_SERVER_NAME=0.0.0.0
+ENV GRADIO_SERVER_PORT=7860
 
-# Install system dependencies for PDF processing and ML libraries
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir gradio>=4.0.0
 
-# Install Gradio
-RUN pip install --no-cache-dir gradio>=4.0.0
+# Copy project files
+COPY src/ ./src/
+COPY app.py .
+COPY chroma_db/ ./chroma_db/
+COPY data/ ./data/
 
-# Copy application code
-COPY . .
+# Create a non-root user for security (HF Spaces requirement)
+RUN useradd -m -u 1000 user
+USER user
 
-# Create directories for data persistence
-RUN mkdir -p /app/chroma_db /app/data
-
-# Expose port (Railway will set PORT env var)
+# Expose the Gradio port
 EXPOSE 7860
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:7860')" || exit 1
 
 # Run the Gradio app
