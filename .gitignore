@@ -7,9 +7,12 @@ venv/
 .DS_Store
 
 # Vector DB
-data/
 chroma_db/
 chroma_db_parent/
+
+# Data - ignore all except BNM policy documents
+data/*
+!data/bnm/
 
 # Outputs
 tests/ragas_results.json
