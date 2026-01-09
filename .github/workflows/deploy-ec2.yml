@@ -1,0 +1,133 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Navigate to app directory
+            cd ~/bnm-rag-agent || mkdir -p ~/bnm-rag-agent && cd ~/bnm-rag-agent
+
+            # Login to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull the latest image
+            docker pull ghcr.io/${{ github.repository }}:latest
+
+            # Stop existing containers (if any)
+            docker compose down || true
+
+            # Copy docker-compose.yml from repo (update if needed)
+            cat > docker-compose.yml << 'EOF'
+            ${{ vars.DOCKER_COMPOSE_CONTENT }}
+            EOF
+
+            # If DOCKER_COMPOSE_CONTENT is not set, use default
+            if [ ! -s docker-compose.yml ]; then
+              curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/deploy/docker-compose.prod.yml -o docker-compose.yml
+            fi
+
+            # Create .env file with secrets
+            cat > .env << EOF
+            OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+            EOF
+
+            # Start services
+            docker compose up -d
+
+            # Wait for health check
+            sleep 30
+
+            # Verify deployment
+            docker compose ps
+            curl -f http://localhost:7860/ || echo "Warning: Health check failed, but containers may still be starting"
+
+            # Clean up old images
+            docker image prune -f
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "=== Deployment Status ==="
+            docker compose ps
+            echo ""
+            echo "=== Container Logs (last 20 lines) ==="
+            docker compose logs --tail=20
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Deployment to EC2 failed! Check the logs above for details."

@@ -1,0 +1,77 @@
+# Production Docker Compose for AWS EC2
+# BNM Policy RAG Agent with ChromaDB (using OpenRouter API for LLM)
+
+services:
+  # Main Gradio Application
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/bank-policy-rag-agent}:latest
+    container_name: bnm-rag-app
+    ports:
+      - "7860:7860"
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - USE_OPENROUTER=true
+    volumes:
+      - app-data:/app/data
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    restart: always
+    networks:
+      - rag-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ChromaDB Vector Database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: bnm-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+    networks:
+      - rag-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  app-data:
+    driver: local
+  chroma-data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
+

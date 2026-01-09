@@ -9,12 +9,12 @@ This module implements a production-ready retrieval pipeline:
 """
 
 import json
+import os
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
 
 from langchain_core.documents import Document
-from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -31,13 +31,21 @@ from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 # Project root (parent of src/)
 PROJECT_ROOT = Path(__file__).parent.parent
 
-# Embedding models (fallback chain)
-# Embedding models (fallback chain)
-PRIMARY_EMBEDDING_MODEL = "nomic-embed-text"
-FALLBACK_EMBEDDING_MODEL = "nomic-embed-text"
+# Check if using OpenRouter (cloud deployment without local Ollama)
+USE_OPENROUTER = os.environ.get("USE_OPENROUTER", "false").lower() == "true"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
-# LLM for query expansion
-QUERY_EXPANSION_MODEL = "qwen2.5:3b-instruct"  # Smaller model is faster for expansion
+# Ollama configuration (for local development)
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+
+# Embedding model (HuggingFace - works everywhere, no external API needed)
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+# LLM for query expansion 
+# - Uses OpenRouter if USE_OPENROUTER=true
+# - Falls back to Ollama for local development
+QUERY_EXPANSION_MODEL_OPENROUTER = "xiaomi/mimo-v2-flash:free"
+QUERY_EXPANSION_MODEL_OLLAMA = "qwen2.5:3b-instruct"
 
 # ChromaDB settings
 CHROMA_COLLECTION_NAME = "bnm_docs"
@@ -47,7 +55,7 @@ CHROMA_PERSIST_DIR = str(PROJECT_ROOT / "chroma_db")
 ENSEMBLE_VECTOR_WEIGHT = 0.7
 ENSEMBLE_BM25_WEIGHT = 0.3
 INITIAL_K = 20  # Documents to retrieve before reranking
-RERANK_TOP_N =5   # Documents to return after reranking
+RERANK_TOP_N = 5   # Documents to return after reranking
 
 # Cross-encoder model for reranking
 CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
@@ -57,11 +65,11 @@ CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
 # Global State (Lazy Initialization)
 # =============================================================================
 
-_embeddings: Optional[OllamaEmbeddings] = None
+_embeddings: Optional[HuggingFaceEmbeddings] = None
 _vectorstore: Optional[Chroma] = None
 _ensemble_retriever: Optional[EnsembleRetriever] = None
 _compression_retriever: Optional[ContextualCompressionRetriever] = None
-_query_expansion_llm: Optional[ChatOllama] = None
+_query_expansion_llm: Optional[Any] = None  # Can be ChatOllama or ChatOpenAI
 _all_docs_for_bm25: Optional[List[Document]] = None
 
 
@@ -69,20 +77,15 @@ _all_docs_for_bm25: Optional[List[Document]] = None
 # Initialization Functions
 # =============================================================================
 
-def get_embeddings():
-    """Get or initialize embeddings with fallback to HuggingFace for CI."""
+def get_embeddings() -> HuggingFaceEmbeddings:
+    """Get or initialize HuggingFace embeddings (works without external API)."""
     global _embeddings
     if _embeddings is None:
-        try:
-            _embeddings = OllamaEmbeddings(model=PRIMARY_EMBEDDING_MODEL)
-            _embeddings.embed_query("test")
-            print(f"Using embedding model: {PRIMARY_EMBEDDING_MODEL}")
-        except Exception as e:
-            print(f"Ollama failed ({e}), using HuggingFace sentence-transformers")
-            # Fallback to HuggingFace embeddings (works without Ollama)
-            _embeddings = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/all-MiniLM-L6-v2"
-            )
+        print(f"Loading embedding model: {EMBEDDING_MODEL}")
+        _embeddings = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL
+        )
+        print(f"Embeddings loaded successfully")
     return _embeddings
 
 
@@ -159,11 +162,33 @@ def get_compression_retriever() -> ContextualCompressionRetriever:
     return _compression_retriever
 
 
-def get_query_expansion_llm() -> ChatOllama:
-    """Get or initialize LLM for query expansion."""
+def get_query_expansion_llm():
+    """Get or initialize LLM for query expansion (OpenRouter or Ollama)."""
     global _query_expansion_llm
     if _query_expansion_llm is None:
-        _query_expansion_llm = ChatOllama(model=QUERY_EXPANSION_MODEL, temperature=0.3)
+        if USE_OPENROUTER and OPENROUTER_API_KEY:
+            # Use OpenRouter API (cloud deployment)
+            from langchain_openai import ChatOpenAI
+            print(f"Using OpenRouter for query expansion: {QUERY_EXPANSION_MODEL_OPENROUTER}")
+            _query_expansion_llm = ChatOpenAI(
+                model=QUERY_EXPANSION_MODEL_OPENROUTER,
+                temperature=0.3,
+                base_url="https://openrouter.ai/api/v1",
+                api_key=OPENROUTER_API_KEY
+            )
+        else:
+            # Use local Ollama (development)
+            try:
+                from langchain_ollama import ChatOllama
+                print(f"Using Ollama for query expansion: {QUERY_EXPANSION_MODEL_OLLAMA}")
+                _query_expansion_llm = ChatOllama(
+                    model=QUERY_EXPANSION_MODEL_OLLAMA,
+                    base_url=OLLAMA_HOST,
+                    temperature=0.3
+                )
+            except Exception as e:
+                print(f"Ollama not available ({e}), query expansion disabled")
+                _query_expansion_llm = None
     return _query_expansion_llm
 
 
@@ -178,6 +203,11 @@ def expand_query_to_bnm_speak(query: str) -> List[str]:
     Generates alternative phrasings using official BNM regulatory language.
     """
     llm = get_query_expansion_llm()
+    
+    # If LLM not available, return original query
+    if llm is None:
+        print("  Query expansion skipped (no LLM available)")
+        return [query]
     
     expansion_prompt = f"""You are an expert on Bank Negara Malaysia (BNM) regulatory terminology.
 

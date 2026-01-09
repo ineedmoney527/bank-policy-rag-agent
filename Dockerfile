@@ -1,20 +1,27 @@
-# Dockerfile for Hugging Face Spaces deployment
-# BNM Policy RAG Agent with Gradio frontend
+# Dockerfile for AWS EC2 deployment
+# BNM Policy RAG Agent with Gradio frontend + ChromaDB (using OpenRouter API)
 
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Set environment variables for HF Spaces
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV GRADIO_SERVER_NAME=0.0.0.0
 ENV GRADIO_SERVER_PORT=7860
 
+# ChromaDB connection (can be overridden in docker-compose)
+ENV CHROMA_HOST=chromadb
+ENV CHROMA_PORT=8000
+# Use OpenRouter API for LLM (no local Ollama needed)
+ENV USE_OPENROUTER=true
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -28,19 +35,20 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy project files
 COPY src/ ./src/
 COPY app.py .
-# COPY chroma_db/ ./chroma_db/
-# COPY data/ ./data/
 
-# Create a non-root user for security (HF Spaces requirement)
-RUN useradd -m -u 1000 user
+# Create directories for mounted volumes
+RUN mkdir -p /app/chroma_db /app/data
+
+# Create a non-root user for security
+RUN useradd -m -u 1000 user && chown -R user:user /app
 USER user
 
 # Expose the Gradio port
 EXPOSE 7860
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:7860')" || exit 1
+# Health check using curl (more reliable)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:7860/ || exit 1
 
 # Run the Gradio app
 CMD ["python", "app.py"]
