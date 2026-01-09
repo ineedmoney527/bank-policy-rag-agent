@@ -36,3 +36,6 @@ numpy>=1.26.0
 
 # Gradio Frontend (for Hugging Face Spaces)
 gradio>=4.0.0
+
+# LangSmith for Monitoring & Tracing
+langsmith>=0.1.0

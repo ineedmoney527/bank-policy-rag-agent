@@ -126,7 +126,8 @@ services:
     volumes:
       - app-data:/app/data
     depends_on:
-      - chromadb
+      chromadb:
+        condition: service_healthy
     restart: always
     networks:
       - rag-network
@@ -141,6 +142,12 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: always
     networks:
       - rag-network

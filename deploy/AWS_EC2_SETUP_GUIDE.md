@@ -2,7 +2,7 @@
 
 This guide walks you through creating an EC2 instance on AWS Console and deploying the BNM Policy RAG Agent.
 
-## Prerequisites
+## Prerequisitesc
 
 - AWS Account with EC2 access
 - GitHub account (for container registry)

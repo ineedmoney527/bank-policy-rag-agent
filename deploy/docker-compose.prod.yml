@@ -13,6 +13,10 @@ services:
       - CHROMA_PORT=8000
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - USE_OPENROUTER=true
+      # LangSmith Monitoring & Tracing
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-agent}
     volumes:
       - app-data:/app/data
     depends_on:

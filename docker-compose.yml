@@ -16,6 +16,10 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       # Use HuggingFace embeddings (no Ollama needed)
       - USE_OPENROUTER=true
+      # LangSmith Monitoring & Tracing
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-bnm-rag-agent}
     volumes:
       - ./chroma_db:/app/chroma_db
       - ./data:/app/data
