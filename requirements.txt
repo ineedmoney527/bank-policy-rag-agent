@@ -33,3 +33,6 @@ datasets>=3.0.0
 python-dotenv>=1.0.0
 tqdm>=4.66.0
 numpy>=1.26.0
+
+# Gradio Frontend
+gradio>=4.0.0
