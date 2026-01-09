@@ -28,8 +28,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy project files
 COPY src/ ./src/
 COPY app.py .
-COPY chroma_db/ ./chroma_db/
-COPY data/ ./data/
+# COPY chroma_db/ ./chroma_db/
+# COPY data/ ./data/
 
 # Create a non-root user for security (HF Spaces requirement)
 RUN useradd -m -u 1000 user
