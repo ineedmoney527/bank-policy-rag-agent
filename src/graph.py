@@ -29,8 +29,11 @@ from langchain_openai import ChatOpenAI
 from langchain_community.document_transformers import LongContextReorder
 from langgraph.graph import StateGraph, END
 
-# Import retriever function
-from retriever import get_relevant_documents
+# Import retriever function (support both local and Docker paths)
+try:
+    from retriever import get_relevant_documents
+except ModuleNotFoundError:
+    from src.retriever import get_relevant_documents
 
 # =============================================================================
 # Global Cache for Parent Store (loaded once, not per-request)
