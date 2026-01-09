@@ -93,7 +93,6 @@ with gr.Blocks(
     chatbot = gr.Chatbot(
         label="Conversation",
         height=450,
-        show_copy_button=True,
         bubble_full_width=False,
     )
     
