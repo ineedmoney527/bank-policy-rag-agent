@@ -62,10 +62,6 @@ EXAMPLE_QUESTIONS = [
 # Build the Gradio interface
 with gr.Blocks(
     title="BNM Policy RAG Agent",
-    theme=gr.themes.Soft(
-        primary_hue="blue",
-        secondary_hue="slate",
-    ),
     css="""
     .gradio-container {
         max-width: 900px !important;
@@ -90,9 +86,11 @@ with gr.Blocks(
         elem_classes=["header-text"]
     )
     
+    # Use type="messages" for Gradio 6.0 compatibility
     chatbot = gr.Chatbot(
         label="Conversation",
         height=450,
+        type="messages"
     )
     
     with gr.Row():
@@ -124,13 +122,15 @@ with gr.Blocks(
         """
     )
     
-    # Event handlers
+    # Event handlers - using Gradio 6.0 message format
     def respond(message, chat_history):
         if not message.strip():
             return "", chat_history
         
         bot_response = query_agent(message, chat_history)
-        chat_history.append((message, bot_response))
+        # Gradio 6.0 uses list of dicts with 'role' and 'content'
+        chat_history.append({"role": "user", "content": message})
+        chat_history.append({"role": "assistant", "content": bot_response})
         return "", chat_history
     
     submit_btn.click(
@@ -150,3 +150,4 @@ with gr.Blocks(
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)
+
