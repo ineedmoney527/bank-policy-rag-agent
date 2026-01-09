@@ -74,7 +74,7 @@ with gr.Blocks(title="BNM Policy RAG Agent") as demo:
         elem_classes=["header-text"]
     )
     
-    # Remove the 'type' parameter - use default chatbot format
+    # Chatbot component - will auto-detect format
     chatbot = gr.Chatbot(
         label="Conversation",
         height=450
@@ -109,14 +109,21 @@ with gr.Blocks(title="BNM Policy RAG Agent") as demo:
         """
     )
     
-    # Event handlers - using standard list of tuples format
+    # Event handlers - using message dict format for Gradio 6.0
     def respond(message, chat_history):
         if not message.strip():
             return "", chat_history
         
+        # Ensure chat_history is a list
+        if chat_history is None:
+            chat_history = []
+        
         bot_response = query_agent(message, chat_history)
-        # Standard Gradio chatbot format: list of [user_msg, bot_msg] pairs
-        chat_history.append([message, bot_response])
+        
+        # Append in message format
+        chat_history.append({"role": "user", "content": message})
+        chat_history.append({"role": "assistant", "content": bot_response})
+        
         return "", chat_history
     
     submit_btn.click(
