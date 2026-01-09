@@ -75,7 +75,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Navigate to app directory
-            cd ~/bnm-rag-agent || mkdir -p ~/bnm-rag-agent && cd ~/bnm-rag-agent
+            cd ~/bnm-rag-agent || (mkdir -p ~/bnm-rag-agent && cd ~/bnm-rag-agent)
+            cd ~/bnm-rag-agent
 
             # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -86,25 +87,27 @@ jobs:
             # Stop existing containers (if any)
             docker compose down || true
 
-            # Copy docker-compose.yml from repo (update if needed)
-            cat > docker-compose.yml << 'EOF'
-            ${{ vars.DOCKER_COMPOSE_CONTENT }}
-            EOF
-
-            # If DOCKER_COMPOSE_CONTENT is not set, use default
+            # Download docker-compose.yml from repo
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/deploy/docker-compose.prod.yml -o docker-compose.yml
+            
+            # Verify file was downloaded
             if [ ! -s docker-compose.yml ]; then
-              curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/deploy/docker-compose.prod.yml -o docker-compose.yml
+              echo "ERROR: Failed to download docker-compose.yml"
+              exit 1
             fi
+            
+            cat docker-compose.yml
 
             # Create .env file with secrets
             cat > .env << EOF
             OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+            GITHUB_REPOSITORY=${{ github.repository }}
             EOF
 
             # Start services
             docker compose up -d
 
-            # Wait for health check
+            # Wait for containers to start
             sleep 30
 
             # Verify deployment
