@@ -60,19 +60,7 @@ EXAMPLE_QUESTIONS = [
 ]
 
 # Build the Gradio interface
-with gr.Blocks(
-    title="BNM Policy RAG Agent",
-    css="""
-    .gradio-container {
-        max-width: 900px !important;
-        margin: auto;
-    }
-    .header-text {
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    """
-) as demo:
+with gr.Blocks(title="BNM Policy RAG Agent") as demo:
     
     gr.Markdown(
         """
@@ -86,11 +74,10 @@ with gr.Blocks(
         elem_classes=["header-text"]
     )
     
-    # Use type="messages" for Gradio 6.0 compatibility
+    # Remove the 'type' parameter - use default chatbot format
     chatbot = gr.Chatbot(
         label="Conversation",
-        height=450,
-        type="messages"
+        height=450
     )
     
     with gr.Row():
@@ -122,15 +109,14 @@ with gr.Blocks(
         """
     )
     
-    # Event handlers - using Gradio 6.0 message format
+    # Event handlers - using standard list of tuples format
     def respond(message, chat_history):
         if not message.strip():
             return "", chat_history
         
         bot_response = query_agent(message, chat_history)
-        # Gradio 6.0 uses list of dicts with 'role' and 'content'
-        chat_history.append({"role": "user", "content": message})
-        chat_history.append({"role": "assistant", "content": bot_response})
+        # Standard Gradio chatbot format: list of [user_msg, bot_msg] pairs
+        chat_history.append([message, bot_response])
         return "", chat_history
     
     submit_btn.click(
@@ -149,5 +135,18 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
-
+    # Move CSS to launch() method for Gradio 6.0
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        css="""
+        .gradio-container {
+            max-width: 900px !important;
+            margin: auto;
+        }
+        .header-text {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        """
+    )
