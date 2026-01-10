@@ -46,16 +46,35 @@ RUN mkdir -p /app/chroma_db
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-# Check if ChromaDB has been ingested (check for parent_store.pkl)\n\
+echo "=== BNM RAG Agent Starting ==="\n\
+echo "CHROMA_HOST: $CHROMA_HOST"\n\
+echo "CHROMA_PORT: $CHROMA_PORT"\n\
+\n\
+# Wait for ChromaDB to be ready if using HTTP client\n\
+if [ -n "$CHROMA_HOST" ]; then\n\
+    echo "Waiting for ChromaDB server at $CHROMA_HOST:$CHROMA_PORT..."\n\
+    for i in $(seq 1 30); do\n\
+        if curl -s "http://$CHROMA_HOST:$CHROMA_PORT/api/v1/heartbeat" > /dev/null 2>&1; then\n\
+            echo "ChromaDB is ready!"\n\
+            break\n\
+        fi\n\
+        echo "Waiting for ChromaDB... ($i/30)"\n\
+        sleep 2\n\
+    done\n\
+fi\n\
+\n\
+# Check if ingestion has been done (check for parent_store.pkl)\n\
 if [ ! -f /app/chroma_db/parent_store.pkl ]; then\n\
-    echo "ChromaDB is empty. Running ingestion..."\n\
+    echo "Parent store not found. Running ingestion..."\n\
     python src/ingestion.py\n\
     echo "Ingestion complete!"\n\
 else\n\
-    echo "ChromaDB already has data. Skipping ingestion."\n\
+    echo "Parent store found. Skipping ingestion."\n\
+    ls -la /app/chroma_db/\n\
 fi\n\
 \n\
 # Start the app\n\
+echo "Starting Gradio app..."\n\
 exec python app.py\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
