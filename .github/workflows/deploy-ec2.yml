@@ -99,7 +99,7 @@ jobs:
             cat docker-compose.yml
 
             # Create .env file with secrets
-            cat > .env << EOF
+            cat > .env <<EOF
             OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
             GITHUB_REPOSITORY=${{ github.repository }}
             LANGCHAIN_TRACING_V2=true
@@ -107,11 +107,22 @@ jobs:
             LANGCHAIN_PROJECT=agent
             EOF
 
-            # Start services
+            # Create necessary directories for bind mounts
+            mkdir -p data/bnm chroma_db
+            
+            # Copy PDFs from the Docker image if data/bnm is empty
+            if [ -z "$(ls -A data/bnm/*.pdf 2>/dev/null)" ]; then
+              echo "No PDFs found in data/bnm, extracting from Docker image..."
+              docker run --rm -v $(pwd)/data/bnm:/host-data ghcr.io/${{ github.repository }}:latest cp -r /app/data/bnm/. /host-data/
+              echo "PDFs extracted: $(ls data/bnm/*.pdf | wc -l) files"
+            fi
+
+            # Start services (entrypoint will handle ingestion if needed)
             docker compose up -d
 
-            # Wait for containers to start
-            sleep 30
+            # Wait for containers to start and ingestion to complete
+            echo "Waiting for app to start (may take a few minutes for first-time ingestion)..."
+            sleep 60
 
             # Verify deployment
             docker compose ps

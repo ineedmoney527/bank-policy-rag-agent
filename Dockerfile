@@ -39,44 +39,12 @@ COPY app.py .
 # Copy BNM policy documents for ingestion
 COPY data/bnm/ ./data/bnm/
 
-# Create directories for ChromaDB
-RUN mkdir -p /app/chroma_db
+# Create directories for ChromaDB and scripts
+RUN mkdir -p /app/chroma_db /app/scripts
 
-# Create entrypoint script that runs ingestion if chroma_db is empty
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-echo "=== BNM RAG Agent Starting ==="\n\
-echo "CHROMA_HOST: $CHROMA_HOST"\n\
-echo "CHROMA_PORT: $CHROMA_PORT"\n\
-\n\
-# Wait for ChromaDB to be ready if using HTTP client\n\
-if [ -n "$CHROMA_HOST" ]; then\n\
-    echo "Waiting for ChromaDB server at $CHROMA_HOST:$CHROMA_PORT..."\n\
-    for i in $(seq 1 30); do\n\
-        if curl -s "http://$CHROMA_HOST:$CHROMA_PORT/api/v1/heartbeat" > /dev/null 2>&1; then\n\
-            echo "ChromaDB is ready!"\n\
-            break\n\
-        fi\n\
-        echo "Waiting for ChromaDB... ($i/30)"\n\
-        sleep 2\n\
-    done\n\
-fi\n\
-\n\
-# Check if ingestion has been done (check for parent_store.pkl)\n\
-if [ ! -f /app/chroma_db/parent_store.pkl ]; then\n\
-    echo "Parent store not found. Running ingestion..."\n\
-    python src/ingestion.py\n\
-    echo "Ingestion complete!"\n\
-else\n\
-    echo "Parent store found. Skipping ingestion."\n\
-    ls -la /app/chroma_db/\n\
-fi\n\
-\n\
-# Start the app\n\
-echo "Starting Gradio app..."\n\
-exec python app.py\n\
-' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Copy entrypoint script (checks ChromaDB and runs ingestion if needed)
+COPY scripts/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 user && chown -R user:user /app

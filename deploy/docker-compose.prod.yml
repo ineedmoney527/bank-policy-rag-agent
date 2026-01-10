@@ -18,10 +18,12 @@ services:
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-agent}
     volumes:
-      - app-data:/app/data
-      - app-chroma:/app/chroma_db
+      # Bind mounts for data persistence (easier to inspect than named volumes)
+      - ./data:/app/data
+      - ./chroma_db:/app/chroma_db
     depends_on:
-      - chromadb
+      chromadb:
+        condition: service_healthy
     restart: always
     networks:
       - rag-network
@@ -51,6 +53,12 @@ services:
     restart: always
     networks:
       - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -64,14 +72,11 @@ services:
         max-file: "3"
 
 volumes:
-  app-data:
-    driver: local
-  app-chroma:
-    driver: local
   chroma-data:
     driver: local
 
 networks:
   rag-network:
     driver: bridge
+
 
