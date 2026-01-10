@@ -22,8 +22,7 @@ services:
       - ./data:/app/data
       - ./chroma_db:/app/chroma_db
     depends_on:
-      chromadb:
-        condition: service_healthy
+      - chromadb
     restart: always
     networks:
       - rag-network
@@ -53,12 +52,7 @@ services:
     restart: always
     networks:
       - rag-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/api/v1/heartbeat || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+
     deploy:
       resources:
         limits:

@@ -52,7 +52,7 @@ RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     # Use Python to check ChromaDB heartbeat (more portable than curl/wget)
-    if python3 -c "import urllib.request; urllib.request.urlopen('http://${CHROMA_HOST:-localhost}:${CHROMA_PORT:-8000}/api/v1/heartbeat', timeout=5)" 2>/dev/null; then
+    if python3 -c "import urllib.request; urllib.request.urlopen('http://${CHROMA_HOST:-localhost}:${CHROMA_PORT:-8000}/api/v2/heartbeat', timeout=5)" 2>/dev/null; then
         echo "ChromaDB is ready!"
         break
     fi
