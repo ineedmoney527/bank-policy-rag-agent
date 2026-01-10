@@ -36,8 +36,28 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY src/ ./src/
 COPY app.py .
 
-# Create directories for mounted volumes
-RUN mkdir -p /app/chroma_db /app/data
+# Copy BNM policy documents for ingestion
+COPY data/bnm/ ./data/bnm/
+
+# Create directories for ChromaDB
+RUN mkdir -p /app/chroma_db
+
+# Create entrypoint script that runs ingestion if chroma_db is empty
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Check if ChromaDB has been ingested (check for parent_store.pkl)\n\
+if [ ! -f /app/chroma_db/parent_store.pkl ]; then\n\
+    echo "ChromaDB is empty. Running ingestion..."\n\
+    python src/ingestion.py\n\
+    echo "Ingestion complete!"\n\
+else\n\
+    echo "ChromaDB already has data. Skipping ingestion."\n\
+fi\n\
+\n\
+# Start the app\n\
+exec python app.py\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 user && chown -R user:user /app
@@ -47,8 +67,8 @@ USER user
 EXPOSE 7860
 
 # Health check using curl (more reliable)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:7860/ || exit 1
 
-# Run the Gradio app
-CMD ["python", "app.py"]
+# Run via entrypoint (checks and runs ingestion if needed)
+CMD ["/app/entrypoint.sh"]

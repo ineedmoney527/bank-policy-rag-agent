@@ -19,6 +19,7 @@ services:
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-agent}
     volumes:
       - app-data:/app/data
+      - app-chroma:/app/chroma_db
     depends_on:
       - chromadb
     restart: always
@@ -64,6 +65,8 @@ services:
 
 volumes:
   app-data:
+    driver: local
+  app-chroma:
     driver: local
   chroma-data:
     driver: local
