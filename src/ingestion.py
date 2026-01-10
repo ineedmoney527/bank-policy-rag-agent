@@ -8,6 +8,7 @@ Structure: Document → PART → SECTION → CLAUSE
 """
 
 import hashlib
+import os
 import pickle
 import re
 from dataclasses import dataclass, field
@@ -28,10 +29,17 @@ from tqdm import tqdm
 # Project root (parent of src/)
 PROJECT_ROOT = Path(__file__).parent.parent
 
-EMBEDDING_MODEL = "nomic-embed-text"
+# ChromaDB settings - supports both HTTP client mode (Docker) and local file mode (dev)
+CHROMA_HOST = os.environ.get("CHROMA_HOST", "")
+CHROMA_PORT = os.environ.get("CHROMA_PORT", "8000")
 CHROMA_COLLECTION_NAME = "bnm_docs"
 CHROMA_PERSIST_DIR = str(PROJECT_ROOT / "chroma_db")
 PARENT_STORE_PATH = str(PROJECT_ROOT / "chroma_db" / "parent_store.pkl")
+
+# Embedding model - use HuggingFace (works without external API)
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+# Fallback: try Ollama if available
+PRIMARY_EMBEDDING_MODEL = "nomic-embed-text"
 
 # Islamic finance keywords
 ISLAMIC_KEYWORDS = ["islamic", "shariah", "takaful", "sukuk", "-i", "murabahah"]
@@ -473,6 +481,8 @@ def process_pdf(pdf_path: Path) -> tuple[List[Document], List[Document]]:
 
 def ingest_all(pdf_dir: str):
     """Main ingestion pipeline."""
+    import chromadb
+    
     pdf_path = Path(pdf_dir)
     files = list(pdf_path.glob("*.pdf"))
     
@@ -483,23 +493,31 @@ def ingest_all(pdf_dir: str):
     print(f"Found {len(files)} PDF files")
     print("Initializing embeddings...")
     
-    embeddings = None
-    try:
-        embeddings = OllamaEmbeddings(model=PRIMARY_EMBEDDING_MODEL)
-        embeddings.embed_query("test")
-        print(f"Using embedding model: {PRIMARY_EMBEDDING_MODEL}")
-    except Exception as e:
-        print(f"Ollama failed ({e}), using HuggingFace sentence-transformers")
-        # Fallback to HuggingFace embeddings (works without Ollama)
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
-    
-    vectorstore = Chroma(
-        persist_directory=CHROMA_PERSIST_DIR,
-        collection_name=CHROMA_COLLECTION_NAME,
-        embedding_function=embeddings
+    # Use HuggingFace embeddings (works everywhere without external API)
+    embeddings = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL
     )
+    print(f"Using embedding model: {EMBEDDING_MODEL}")
+    
+    # Connect to ChromaDB - HTTP client or local
+    if CHROMA_HOST:
+        print(f"Connecting to ChromaDB server at {CHROMA_HOST}:{CHROMA_PORT}")
+        chroma_client = chromadb.HttpClient(
+            host=CHROMA_HOST,
+            port=int(CHROMA_PORT)
+        )
+        vectorstore = Chroma(
+            client=chroma_client,
+            collection_name=CHROMA_COLLECTION_NAME,
+            embedding_function=embeddings
+        )
+    else:
+        print(f"Using local ChromaDB at {CHROMA_PERSIST_DIR}")
+        vectorstore = Chroma(
+            persist_directory=CHROMA_PERSIST_DIR,
+            collection_name=CHROMA_COLLECTION_NAME,
+            embedding_function=embeddings
+        )
     
     all_parents = []
     all_children = []

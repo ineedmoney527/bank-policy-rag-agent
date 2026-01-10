@@ -47,9 +47,12 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 QUERY_EXPANSION_MODEL_OPENROUTER = "xiaomi/mimo-v2-flash:free"
 QUERY_EXPANSION_MODEL_OLLAMA = "qwen2.5:3b-instruct"
 
-# ChromaDB settings
+# ChromaDB settings - supports both HTTP client mode (Docker) and local file mode (dev)
+CHROMA_HOST = os.environ.get("CHROMA_HOST", "")
+CHROMA_PORT = os.environ.get("CHROMA_PORT", "8000")
 CHROMA_COLLECTION_NAME = "bnm_docs"
 CHROMA_PERSIST_DIR = str(PROJECT_ROOT / "chroma_db")
+PARENT_STORE_PATH = str(PROJECT_ROOT / "chroma_db" / "parent_store.pkl")
 
 # Retrieval settings
 ENSEMBLE_VECTOR_WEIGHT = 0.7
@@ -90,14 +93,35 @@ def get_embeddings() -> HuggingFaceEmbeddings:
 
 
 def get_vectorstore() -> Chroma:
-    """Get or initialize Chroma vectorstore."""
+    """Get or initialize Chroma vectorstore.
+    
+    Uses HTTP client if CHROMA_HOST is set (Docker deployment),
+    otherwise uses local file-based persistence (development).
+    """
     global _vectorstore
     if _vectorstore is None:
-        _vectorstore = Chroma(
-            persist_directory=CHROMA_PERSIST_DIR,
-            collection_name=CHROMA_COLLECTION_NAME,
-            embedding_function=get_embeddings()
-        )
+        import chromadb
+        
+        if CHROMA_HOST:
+            # HTTP client mode - connect to external ChromaDB server
+            print(f"Connecting to ChromaDB server at {CHROMA_HOST}:{CHROMA_PORT}")
+            chroma_client = chromadb.HttpClient(
+                host=CHROMA_HOST,
+                port=int(CHROMA_PORT)
+            )
+            _vectorstore = Chroma(
+                client=chroma_client,
+                collection_name=CHROMA_COLLECTION_NAME,
+                embedding_function=get_embeddings()
+            )
+        else:
+            # Local file mode - use persist_directory
+            print(f"Using local ChromaDB at {CHROMA_PERSIST_DIR}")
+            _vectorstore = Chroma(
+                persist_directory=CHROMA_PERSIST_DIR,
+                collection_name=CHROMA_COLLECTION_NAME,
+                embedding_function=get_embeddings()
+            )
         print(f"Connected to Chroma: {CHROMA_COLLECTION_NAME}")
     return _vectorstore
 
