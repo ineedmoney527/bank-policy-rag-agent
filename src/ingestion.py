@@ -8,6 +8,7 @@ Structure: Document → PART → SECTION → CLAUSE
 """
 
 import hashlib
+import json
 import os
 import pickle
 import re
@@ -453,7 +454,7 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
                 metadata={
                     "id": parent_id,
                     "is_parent": True,
-                    "references": section_refs,  # Store references in parent
+                    "references": json.dumps(section_refs),  # Serialize to JSON for ChromaDB
                     **section.metadata
                 }
             )
@@ -476,7 +477,7 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
                         metadata={
                             "parent_id": parent_id,
                             "is_parent": False,
-                            "references": clause_refs,  # Store references in child
+                            "references": json.dumps(clause_refs),  # Serialize to JSON
                             **clause.metadata
                         }
                     )
@@ -498,7 +499,7 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
                                 "parent_id": parent_id,
                                 "is_parent": False,
                                 "chunk_index": chunk_idx,
-                                "references": chunk_refs,
+                                "references": json.dumps(chunk_refs),  # Serialize to JSON
                                 **clause.metadata
                             }
                         )

@@ -120,9 +120,17 @@ jobs:
             # Start services (entrypoint will handle ingestion if needed)
             docker compose up -d
 
-            # Wait for containers to start and ingestion to complete
-            echo "Waiting for app to start (may take a few minutes for first-time ingestion)..."
-            sleep 60
+            # Wait for containers to start
+            echo "Waiting for app container to start..."
+            sleep 15
+            
+            # Force re-run ingestion to ensure reference_map.pkl is fresh
+            echo "Running document ingestion..."
+            docker compose exec -T app python -c "from src.ingestion import ingest_all; ingest_all('data/bnm')" || echo "Ingestion may have already completed"
+            
+            # Wait for ingestion to complete (if running in background)
+            echo "Waiting for ingestion to complete (may take a few minutes)..."
+            sleep 45
 
             # Verify deployment
             docker compose ps

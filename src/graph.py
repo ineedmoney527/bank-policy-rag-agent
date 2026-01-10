@@ -12,6 +12,7 @@ This module implements a sophisticated RAG pipeline with:
 """
 
 import hashlib
+import json
 import pickle
 import os
 import re
@@ -689,8 +690,12 @@ OUTPUT FORMAT:
             
             # Collect all referenced section/appendix IDs from multiple sources
             for doc in state["documents"]:
-                # 1. From document metadata (stored during ingestion)
-                doc_refs = doc.metadata.get("references", [])
+                # 1. From document metadata (stored during ingestion as JSON string)
+                doc_refs_raw = doc.metadata.get("references", "[]")
+                try:
+                    doc_refs = json.loads(doc_refs_raw) if isinstance(doc_refs_raw, str) else doc_refs_raw
+                except (json.JSONDecodeError, TypeError):
+                    doc_refs = []
                 if doc_refs:
                     referenced_ids.update(doc_refs)
                 
