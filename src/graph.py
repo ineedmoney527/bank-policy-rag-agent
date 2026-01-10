@@ -45,6 +45,11 @@ _parent_store_cache: Optional[Dict[str, Document]] = None
 _parent_store_mtime: Optional[float] = None  # Track file modification time
 PARENT_STORE_PATH = PROJECT_ROOT / "chroma_db" / "parent_store.pkl"
 
+# Reference map cache (maps section_id -> referenced section/appendix IDs)
+_reference_map_cache: Optional[Dict[str, List[str]]] = None
+_reference_map_mtime: Optional[float] = None
+REFERENCE_MAP_PATH = PROJECT_ROOT / "chroma_db" / "reference_map.pkl"
+
 def get_parent_store() -> Dict[str, Document]:
     """Get cached parent store, reloading if file was modified."""
     global _parent_store_cache, _parent_store_mtime
@@ -62,6 +67,25 @@ def get_parent_store() -> Dict[str, Document]:
         _parent_store_cache = {}
     
     return _parent_store_cache
+
+
+def get_reference_map() -> Dict[str, List[str]]:
+    """Get cached reference map, reloading if file was modified."""
+    global _reference_map_cache, _reference_map_mtime
+    
+    if Path(REFERENCE_MAP_PATH).exists():
+        current_mtime = Path(REFERENCE_MAP_PATH).stat().st_mtime
+        
+        # Reload if file was modified since last load
+        if _reference_map_cache is None or _reference_map_mtime != current_mtime:
+            with open(REFERENCE_MAP_PATH, "rb") as f:
+                _reference_map_cache = pickle.load(f)
+            _reference_map_mtime = current_mtime
+            print(f"Loaded reference map ({len(_reference_map_cache)} sections with refs)")
+    else:
+        _reference_map_cache = {}
+    
+    return _reference_map_cache
 
 
 # =============================================================================
@@ -656,31 +680,63 @@ OUTPUT FORMAT:
         
         state["grade_status"] = "Relevant"
         
-        # APPENDIX HOPPING: Check if documents reference appendices and fetch them
+        # REFERENCE EXPANSION: Load referenced sections and appendices
+        # Uses both the pre-computed reference_map and references in metadata
         if parent_dict and state["documents"]:
-            appendix_refs = set()
-            # Pattern to find appendix references like "Appendix 10", "in Appendix 5"
-            appendix_pattern = re.compile(r'(?:in |see |specified in |refer to )?Appendix\s+(\d+)', re.IGNORECASE)
+            reference_map = get_reference_map()
+            referenced_ids = set()
+            seen_parent_ids = set(doc.metadata.get("id") for doc in state["documents"] if doc.metadata.get("is_parent"))
             
+            # Collect all referenced section/appendix IDs from multiple sources
             for doc in state["documents"]:
+                # 1. From document metadata (stored during ingestion)
+                doc_refs = doc.metadata.get("references", [])
+                if doc_refs:
+                    referenced_ids.update(doc_refs)
+                
+                # 2. From reference_map using section_id key
+                source_pdf = doc.metadata.get("source_pdf", "")
+                section_id = doc.metadata.get("section_id", "")
+                if source_pdf and section_id:
+                    ref_map_key = f"{source_pdf}::{section_id}"
+                    if ref_map_key in reference_map:
+                        referenced_ids.update(reference_map[ref_map_key])
+                
+                # 3. Fallback: Runtime pattern matching for Appendix references
+                appendix_pattern = re.compile(r'(?:in |see |specified in |refer to )?Appendix\s+(\d+[A-Z]?)', re.IGNORECASE)
                 matches = appendix_pattern.findall(doc.page_content)
-                appendix_refs.update(matches)
+                for ref_num in matches:
+                    referenced_ids.add(f"APPENDIX {ref_num.upper()}")
             
-            if appendix_refs:
-                # Find matching appendices in parent store
-                appendix_docs = []
+            if referenced_ids:
+                # Find matching documents in parent store
+                expanded_docs = []
                 for k, v in parent_dict.items():
-                    section_id = str(v.metadata.get('section_id', ''))
-                    if v.metadata.get('is_appendix'):
-                        # Check if this appendix number is referenced
-                        for ref_num in appendix_refs:
-                            if f"Appendix {ref_num}:" in section_id:
-                                appendix_docs.append(v)
+                    if k in seen_parent_ids:
+                        continue  # Skip already included parents
+                        
+                    part_id = str(v.metadata.get('part_id', ''))
+                    section_num = str(v.metadata.get('section_num', ''))
+                    
+                    for ref_id in referenced_ids:
+                        # Match APPENDIX references
+                        if ref_id.startswith("APPENDIX") and ref_id == part_id:
+                            expanded_docs.append(v)
+                            seen_parent_ids.add(k)
+                            break
+                        # Match SECTION references (e.g., "SECTION 14A" matches section_num "14A")
+                        if ref_id.startswith("SECTION"):
+                            ref_section_num = ref_id.replace("SECTION ", "")
+                            if section_num == ref_section_num:
+                                expanded_docs.append(v)
+                                seen_parent_ids.add(k)
                                 break
                 
-                if appendix_docs:
-                    print(f"  → Hopped to {len(appendix_docs)} referenced appendices: {list(appendix_refs)}")
-                    state["documents"].extend(appendix_docs)
+                if expanded_docs:
+                    section_count = sum(1 for d in expanded_docs if not d.metadata.get('is_appendix'))
+                    appendix_count = sum(1 for d in expanded_docs if d.metadata.get('is_appendix'))
+                    print(f"  → Expanded to {section_count} referenced sections + {appendix_count} appendices")
+                    state["documents"].extend(expanded_docs)
     else:
         state["documents"] = []
         state["grade_status"] = "Irrelevant"

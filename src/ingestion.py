@@ -35,6 +35,7 @@ CHROMA_PORT = os.environ.get("CHROMA_PORT", "8000")
 CHROMA_COLLECTION_NAME = "bnm_docs"
 CHROMA_PERSIST_DIR = str(PROJECT_ROOT / "chroma_db")
 PARENT_STORE_PATH = str(PROJECT_ROOT / "chroma_db" / "parent_store.pkl")
+REFERENCE_MAP_PATH = str(PROJECT_ROOT / "chroma_db" / "reference_map.pkl")
 
 # Embedding model - use HuggingFace (works without external API)
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -89,6 +90,19 @@ SIMPLE_CLAUSE_PATTERN = re.compile(
 
 # ToC line pattern
 TOC_PATTERN = re.compile(r'\.{5,}\s*\d+\s*$')
+
+# =============================================================================
+# Cross-Reference Detection Patterns
+# =============================================================================
+# Detects references like "Section 14A.10.2", "section 10", "Appendix 5"
+SECTION_REF_PATTERN = re.compile(
+    r'\bSection\s+(\d+[A-Z]?(?:\.\d+)*)\b',
+    re.IGNORECASE
+)
+APPENDIX_REF_PATTERN = re.compile(
+    r'\bAppendix\s+(\d+[A-Z]?)\b',
+    re.IGNORECASE
+)
 
 # APPENDIX: Matches "Appendix 1 Title", "Appendix 1: Title", "**Appendix 1** Title"
 # APPENDIX: Matches "**Appendix 1** Title", "**APPENDIX 4a** Title"
@@ -198,6 +212,37 @@ def clean_false_strikethrough(markdown: str) -> str:
     """
     # Remove ~~ markers while preserving the text inside
     return re.sub(r'~~([^~]+)~~', r'\1', markdown)
+
+
+def extract_references(text: str, self_section_num: Optional[str] = None) -> List[str]:
+    """
+    Extract cross-section references from text content.
+    
+    Args:
+        text: The text content to scan for references
+        self_section_num: The section number of the current document (to exclude self-refs)
+    
+    Returns:
+        List of normalized reference IDs like ["SECTION 14A", "APPENDIX 10"]
+    """
+    references = set()
+    
+    # Find Section references (e.g., "Section 14A.10.2" -> "SECTION 14A")
+    for match in SECTION_REF_PATTERN.finditer(text):
+        ref_num = match.group(1)
+        # Normalize to base section (14A.10.2 -> 14A)
+        base_section = ref_num.split('.')[0]
+        # Skip self-references
+        if self_section_num and base_section == self_section_num:
+            continue
+        references.add(f"SECTION {base_section}")
+    
+    # Find Appendix references (e.g., "Appendix 10" -> "APPENDIX 10")
+    for match in APPENDIX_REF_PATTERN.finditer(text):
+        ref_num = match.group(1).upper()
+        references.add(f"APPENDIX {ref_num}")
+    
+    return list(references)
 
 
 # =============================================================================
@@ -369,15 +414,20 @@ def parse_hierarchy(markdown: str, base_meta: dict) -> List[HierarchyNode]:
 # Document Creation
 # =============================================================================
 
-def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], List[Document]]:
+def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], List[Document], Dict[str, List[str]]]:
     """
     Create parent and child documents from hierarchy.
     
     Parents: SECTION-level (for context expansion)
     Children: CLAUSE-level (for search)
+    
+    Returns:
+        Tuple of (parents, children, reference_map)
+        reference_map: Dict mapping section_id -> list of referenced section/appendix IDs
     """
     parents = []
     children = []
+    reference_map: Dict[str, List[str]] = {}
     
     for part in hierarchy:
         for section in part.children:
@@ -389,11 +439,21 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
             # Full section text = section content + all clauses
             section_text = section.get_full_text()
             
+            # Extract references from entire section content
+            section_num = section.metadata.get("section_num")
+            section_refs = extract_references(section_text, self_section_num=section_num)
+            
+            # Build reference map key using source + section for uniqueness
+            ref_map_key = f"{section.metadata['source_pdf']}::{section.id}"
+            if section_refs:
+                reference_map[ref_map_key] = section_refs
+            
             parent_doc = Document(
                 page_content=section_text[:50000],  # Increased for 262K context models
                 metadata={
                     "id": parent_id,
                     "is_parent": True,
+                    "references": section_refs,  # Store references in parent
                     **section.metadata
                 }
             )
@@ -407,12 +467,16 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
             for clause in section.children:
                 clause_text = f"{clause.id}: {clause.content}"
                 
+                # Extract references from this specific clause
+                clause_refs = extract_references(clause.content, self_section_num=section_num)
+                
                 if len(clause_text) <= MAX_CLAUSE_LEN:
                     child_doc = Document(
                         page_content=clause_text,
                         metadata={
                             "parent_id": parent_id,
                             "is_parent": False,
+                            "references": clause_refs,  # Store references in child
                             **clause.metadata
                         }
                     )
@@ -425,12 +489,16 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
                         chunk_end = min(chunk_start + MAX_CLAUSE_LEN, len(clause_text))
                         chunk_content = clause_text[chunk_start:chunk_end]
                         
+                        # Extract refs from this chunk specifically
+                        chunk_refs = extract_references(chunk_content, self_section_num=section_num)
+                        
                         child_doc = Document(
                             page_content=chunk_content,
                             metadata={
                                 "parent_id": parent_id,
                                 "is_parent": False,
                                 "chunk_index": chunk_idx,
+                                "references": chunk_refs,
                                 **clause.metadata
                             }
                         )
@@ -439,15 +507,15 @@ def create_documents(hierarchy: List[HierarchyNode]) -> tuple[List[Document], Li
                         chunk_start = chunk_end - OVERLAP if chunk_end < len(clause_text) else chunk_end
                         chunk_idx += 1
     
-    return parents, children
+    return parents, children, reference_map
 
 
 # =============================================================================
 # PDF Processing
 # =============================================================================
 
-def process_pdf(pdf_path: Path) -> tuple[List[Document], List[Document]]:
-    """Process a single PDF into parent/child documents."""
+def process_pdf(pdf_path: Path) -> tuple[List[Document], List[Document], Dict[str, List[str]]]:
+    """Process a single PDF into parent/child documents and reference map."""
     filename = pdf_path.name
     
     # Convert to markdown with page chunks to access first page
@@ -471,7 +539,7 @@ def process_pdf(pdf_path: Path) -> tuple[List[Document], List[Document]]:
     # Parse hierarchy
     hierarchy = parse_hierarchy(markdown, base_meta)
     
-    # Create documents
+    # Create documents and reference map
     return create_documents(hierarchy)
 
 
@@ -521,13 +589,16 @@ def ingest_all(pdf_dir: str):
     
     all_parents = []
     all_children = []
+    all_references: Dict[str, List[str]] = {}
     
     for pdf in tqdm(files, desc="Processing PDFs"):
         try:
-            parents, children = process_pdf(pdf)
+            parents, children, ref_map = process_pdf(pdf)
             all_parents.extend(parents)
             all_children.extend(children)
-            print(f"  {pdf.name}: {len(parents)} sections, {len(children)} clauses")
+            all_references.update(ref_map)
+            ref_count = len(ref_map)
+            print(f"  {pdf.name}: {len(parents)} sections, {len(children)} clauses, {ref_count} sections with refs")
         except Exception as e:
             print(f"  ERROR {pdf.name}: {e}")
     
@@ -538,6 +609,11 @@ def ingest_all(pdf_dir: str):
     with open(PARENT_STORE_PATH, "wb") as f:
         pickle.dump(parent_dict, f)
     
+    # Save reference map to pickle
+    print(f"Saving reference map ({len(all_references)} sections with refs) to {REFERENCE_MAP_PATH}...")
+    with open(REFERENCE_MAP_PATH, "wb") as f:
+        pickle.dump(all_references, f)
+    
     # Add children to ChromaDB
     if all_children:
         print(f"Adding {len(all_children)} child clauses to ChromaDB...")
@@ -545,6 +621,7 @@ def ingest_all(pdf_dir: str):
     
     print(f"\n✓ Ingestion complete!")
     print(f"  Parents: {len(all_parents)} → {PARENT_STORE_PATH}")
+    print(f"  References: {len(all_references)} → {REFERENCE_MAP_PATH}")
     print(f"  Children: {len(all_children)} → {CHROMA_PERSIST_DIR}")
 
 
