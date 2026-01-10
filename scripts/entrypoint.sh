@@ -51,7 +51,8 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -sf "http://${CHROMA_HOST:-localhost}:${CHROMA_PORT:-8000}/api/v1/heartbeat" > /dev/null 2>&1; then
+    # Use Python to check ChromaDB heartbeat (more portable than curl/wget)
+    if python3 -c "import urllib.request; urllib.request.urlopen('http://${CHROMA_HOST:-localhost}:${CHROMA_PORT:-8000}/api/v1/heartbeat', timeout=5)" 2>/dev/null; then
         echo "ChromaDB is ready!"
         break
     fi
@@ -62,8 +63,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
 done
 
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo "ERROR: ChromaDB did not become ready in time"
-    # Continue anyway - maybe it's local mode
+    echo "WARNING: ChromaDB did not become ready in time, continuing anyway..."
 fi
 
 # Check if ingestion is needed

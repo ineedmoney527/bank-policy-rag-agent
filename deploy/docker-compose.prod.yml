@@ -54,7 +54,7 @@ services:
     networks:
       - rag-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/api/v1/heartbeat || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
