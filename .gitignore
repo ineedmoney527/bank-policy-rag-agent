@@ -13,7 +13,7 @@ chroma_db_parent/
 # Data - ignore all except BNM policy documents
 data/*
 !data/bnm/
-
+/he.md
 # Outputs
 tests/ragas_results.json
 
